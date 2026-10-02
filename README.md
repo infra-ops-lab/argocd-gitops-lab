@@ -9,8 +9,6 @@ and a registry hosted on a third machine. Each folder is one lesson — a short 
 > **New to ArgoCD? Start here → [ARCHITECTURE.md](ARCHITECTURE.md)** — what it is, what it can do, what you set up where, the 3 components, the
 > flow from git to cluster, and the words used in every lesson. Then do the lessons in order.
 
-✅ = run end-to-end on the reference lab · 📝 = written, verify as you go (fixes welcome)
-
 ```
  git server + registry           ArgoCD (tools cluster)            target cluster
  (repo: deploy-demo,  ◄─ polls ──┤ Application hello-web  ── apply ──► API :6443
