@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: gitops-apps
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: http://<gitea-host>:<port>/<owner>/gitops-apps.git
+        revision: main
+        directories:
+          - path: apps/*
+  template:
+    metadata:
+      name: '{{.path.basename}}'
+    spec:
+      project: default
+      source:
+        repoURL: http://<gitea-host>:<port>/<owner>/gitops-apps.git
+        targetRevision: main
+        path: '{{.path.path}}'
+      destination:
+        name: edge-cluster
+        namespace: '{{.path.basename}}'
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true]

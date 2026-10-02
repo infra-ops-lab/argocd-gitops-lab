@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: hello-web }
+  template:
+    metadata:
+      labels: { app: hello-web }
+    spec:
+      containers:
+        - name: web
+          image: <registry-host>:<port>/<owner>/hello-web:<sha7>
+          ports:
+            - containerPort: 80

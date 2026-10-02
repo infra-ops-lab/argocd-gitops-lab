@@ -1,0 +1,5 @@
+server = "http://<registry-host>:<port>"
+
+[host."http://<registry-host>:<port>"]
+  capabilities = ["pull", "resolve"]
+  skip_verify = true

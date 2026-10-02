@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: team-apps-repos
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - scmProvider:
+        gitea:
+          owner: team-apps
+          api: http://<gitea-host>:<port>
+          insecure: true
+        filters:
+          - pathsExist: [k8s]
+  template:
+    metadata:
+      name: '{{.repository}}'
+    spec:
+      project: default
+      source:
+        repoURL: 'http://<gitea-host>:<port>/{{.organization}}/{{.repository}}.git'
+        targetRevision: '{{.branch}}'
+        path: k8s
+      destination:
+        name: edge-cluster
+        namespace: '{{.repository}}'
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true]

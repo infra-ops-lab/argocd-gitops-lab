@@ -1,0 +1,6 @@
+data:
+  policy.default: role:readonly
+  policy.csv: |
+    p, role:team-a-dev, applications, get,  team-a/*, allow
+    p, role:team-a-dev, applications, sync, team-a/*, allow
+    g, dev, role:team-a-dev

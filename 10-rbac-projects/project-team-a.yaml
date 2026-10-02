@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: team-a
+  namespace: argocd
+spec:
+  description: team A may deploy only its own repos, only into team-a-* namespaces on edge-cluster
+  sourceRepos:
+    - http://<gitea-host>:<port>/team-apps/*
+  destinations:
+    - name: edge-cluster
+      namespace: team-a-*
+  clusterResourceWhitelist:
+    - { group: "", kind: Namespace }
+  namespaceResourceWhitelist:
+    - { group: "*", kind: "*" }

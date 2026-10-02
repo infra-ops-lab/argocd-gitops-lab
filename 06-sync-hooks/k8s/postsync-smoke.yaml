@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smoke-test
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: smoke
+          image: curlimages/curl:8.10.1
+          command: ["sh", "-c", "curl -sf http://hello-web/ | grep hello-web && echo SMOKE PASS"]

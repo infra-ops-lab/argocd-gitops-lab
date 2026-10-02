@@ -1,0 +1,11 @@
+resources:
+  - ../../base
+replicas:
+  - name: hello-web
+    count: 1
+patches:
+  - target: { kind: Service, name: hello-web }
+    patch: |
+      - op: add
+        path: /spec/ports/0/nodePort
+        value: 30094

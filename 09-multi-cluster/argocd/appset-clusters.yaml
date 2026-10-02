@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: fleet-whoami
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters: {}
+  template:
+    metadata:
+      name: 'whoami-{{.name}}'
+    spec:
+      project: default
+      source:
+        repoURL: http://<gitea-host>:<port>/<owner>/deploy-demo.git
+        targetRevision: main
+        path: fleet
+      destination:
+        server: '{{.server}}'
+        namespace: fleet
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true]

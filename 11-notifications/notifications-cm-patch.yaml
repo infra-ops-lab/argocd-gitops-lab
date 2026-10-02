@@ -1,0 +1,18 @@
+data:
+  service.webhook.echo: |
+    url: http://echo.argocd.svc
+    headers:
+      - name: Content-Type
+        value: application/json
+  template.app-event: |
+    webhook:
+      echo:
+        method: POST
+        body: |
+          {"app": "{{.app.metadata.name}}", "sync": "{{.app.status.sync.status}}", "health": "{{.app.status.health.status}}", "revision": "{{.app.status.sync.revision}}"}
+  trigger.on-synced: |
+    - when: app.status.operationState != nil and app.status.operationState.phase in ['Succeeded']
+      send: [app-event]
+  trigger.on-degraded: |
+    - when: app.status.health.status == 'Degraded'
+      send: [app-event]

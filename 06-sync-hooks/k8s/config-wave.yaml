@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hello-config
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  GREETING: "applied before the Deployment (wave -1 < wave 0)"

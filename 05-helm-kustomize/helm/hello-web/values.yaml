@@ -1,0 +1,3 @@
+replicas: 1
+image: <registry-host>:<port>/<owner>/hello-web:<sha7>
+nodePort: 30096
