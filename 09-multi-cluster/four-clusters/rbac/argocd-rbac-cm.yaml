@@ -1,0 +1,57 @@
+# Who may do what, where (Argo CD RBAC). Apply on mgmt:  kubectl -n argocd apply -f argocd-rbac-cm.yaml
+#
+#                     dev / staging (project <team>-nonprod)        prod (project <team>-prod)
+#  platform-admin     everything                                    everything
+#  release-manager    view, logs                                    view, logs, sync (inside the sync window)
+#  shop-developer     view, logs, sync, restart, exec  (shop only)  view, logs (shop only)
+#  payments-developer view, logs, sync, restart, exec  (payments)   view, logs (payments only)
+#  everyone else      read-only (policy.default)
+#
+# Line format:  p, <role>, <resource>, <action>, <project>/<app>, allow|deny
+#               g, <user or SSO group>, <role>
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: argocd
+  labels: { app.kubernetes.io/part-of: argocd }
+data:
+  policy.default: role:readonly
+  scopes: "[groups]"
+  policy.csv: |
+    # --- platform admins: full control (built-in admin role)
+    g, platform-admins, role:admin
+
+    # --- release managers: read everything, sync only production projects
+    p, role:release-manager, applications, get,  */*,             allow
+    p, role:release-manager, applications, sync, shop-prod/*,     allow
+    p, role:release-manager, applications, sync, payments-prod/*, allow
+    p, role:release-manager, logs,         get,  */*,             allow
+    g, release-managers, role:release-manager
+
+    # --- shop developers: own apps only; act in non-prod, look in prod
+    p, role:shop-developer, applications, get,  shop-nonprod/*, allow
+    p, role:shop-developer, applications, get,  shop-prod/*,    allow
+    p, role:shop-developer, applications, sync, shop-nonprod/*, allow
+    p, role:shop-developer, applications, action/apps/Deployment/restart, shop-nonprod/*, allow
+    p, role:shop-developer, logs,         get,  shop-nonprod/*, allow
+    p, role:shop-developer, logs,         get,  shop-prod/*,    allow
+    p, role:shop-developer, exec,         create, shop-nonprod/*, allow
+    g, shop-developers, role:shop-developer
+
+    # --- payments developers: same shape, payments projects
+    p, role:payments-developer, applications, get,  payments-nonprod/*, allow
+    p, role:payments-developer, applications, get,  payments-prod/*,    allow
+    p, role:payments-developer, applications, sync, payments-nonprod/*, allow
+    p, role:payments-developer, applications, action/apps/Deployment/restart, payments-nonprod/*, allow
+    p, role:payments-developer, logs,         get,  payments-nonprod/*, allow
+    p, role:payments-developer, logs,         get,  payments-prod/*,    allow
+    p, role:payments-developer, exec,         create, payments-nonprod/*, allow
+    g, payments-developers, role:payments-developer
+
+    # --- lab only: local accounts (see argocd-cm-accounts.yaml) mapped to the same roles.
+    # With SSO, delete these lines: the g-lines above already map your IdP groups.
+    g, petra, role:admin
+    g, rita,  role:release-manager
+    g, sam,   role:shop-developer
+    g, pat,   role:payments-developer

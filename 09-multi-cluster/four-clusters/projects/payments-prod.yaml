@@ -1,0 +1,31 @@
+# payments team, production: only the prod cluster, only payments-* namespaces, only the team's repos.
+# Sync windows: when an allow window exists, syncs (manual and automatic) are only possible while it
+# is open: Monday-Thursday 09:00-17:00 UTC. Emergencies: a platform admin adds a temporary window via Git.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: payments-prod
+  namespace: argocd
+spec:
+  description: payments team, production
+  sourceRepos:
+    - http://<git-host>/payments/*
+  destinations:
+    - { name: prod, namespace: "payments-*" }
+  clusterResourceWhitelist: []
+  namespaceResourceBlacklist:
+    - { group: "", kind: ResourceQuota }
+    - { group: "", kind: LimitRange }
+    - { group: networking.k8s.io, kind: NetworkPolicy }
+  syncWindows:
+    - kind: allow
+      schedule: "0 9 * * 1-4"
+      duration: 8h
+      timeZone: UTC
+      applications: ["*"]
+      manualSync: false
+    # Example change freeze: uncomment and set the dates.
+    # - kind: deny
+    #   schedule: "0 0 20 12 *"
+    #   duration: 336h
+    #   applications: ["*"]

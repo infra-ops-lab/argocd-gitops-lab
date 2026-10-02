@@ -1,0 +1,36 @@
+# shop: every app folder x the prod cluster. No automated sync: a release manager presses Sync,
+# and only inside the project's sync window. Deleting this ApplicationSet keeps the running apps.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: shop-prod
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  syncPolicy:
+    preserveResourcesOnDeletion: true
+  generators:
+    - matrix:
+        generators:
+          - clusters:
+              selector:
+                matchLabels: { env: prod }
+          - git:
+              repoURL: http://<git-host>/shop/shop-deploy.git
+              revision: main
+              directories:
+                - path: apps/*
+  template:
+    metadata:
+      name: "shop-{{.path.basename}}-{{.name}}"
+      labels: { team: shop, env: prod }
+    spec:
+      project: shop-prod
+      source:
+        repoURL: http://<git-host>/shop/shop-deploy.git
+        targetRevision: main
+        path: '{{.path.path}}/overlays/prod'
+      destination:
+        name: "{{.name}}"
+        namespace: "shop-{{.path.basename}}"

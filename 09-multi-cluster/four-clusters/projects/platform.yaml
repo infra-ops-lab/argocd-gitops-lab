@@ -1,0 +1,15 @@
+# Platform team: cluster add-ons and tenant namespaces on every cluster. Only platform admins use it.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+spec:
+  description: Platform-owned add-ons and tenant namespaces, all clusters
+  sourceRepos:
+    - http://<git-host>/platform/*
+  destinations:
+    - name: "*"
+      namespace: "*"
+  clusterResourceWhitelist:
+    - { group: "*", kind: "*" }

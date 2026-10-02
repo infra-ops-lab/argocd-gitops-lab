@@ -1,0 +1,36 @@
+# shop: every app folder in the team's deploy repo x every non-prod cluster (dev, staging).
+# apps/<app>/overlays/<env> is picked from the cluster's env label. Auto-sync with self-heal.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: shop-nonprod
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - matrix:
+        generators:
+          - clusters:
+              selector:
+                matchLabels: { tier: nonprod }
+          - git:
+              repoURL: http://<git-host>/shop/shop-deploy.git
+              revision: main
+              directories:
+                - path: apps/*
+  template:
+    metadata:
+      name: "shop-{{.path.basename}}-{{.name}}"
+      labels: { team: shop, env: '{{index .metadata.labels "env"}}' }
+    spec:
+      project: shop-nonprod
+      source:
+        repoURL: http://<git-host>/shop/shop-deploy.git
+        targetRevision: main
+        path: '{{.path.path}}/overlays/{{index .metadata.labels "env"}}'
+      destination:
+        name: "{{.name}}"
+        namespace: "shop-{{.path.basename}}"
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }

@@ -1,0 +1,27 @@
+# Platform: team namespaces + quotas on every non-prod cluster (prod gets them from its bootstrap,
+# see target-access/argocd-manager-prod.yaml, because Argo CD has no cluster-scoped rights there).
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: platform-tenants
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { tier: nonprod }
+  template:
+    metadata:
+      name: "tenants-{{.name}}"
+    spec:
+      project: platform
+      source:
+        repoURL: http://<git-host>/platform/platform-deploy.git
+        targetRevision: main
+        path: tenants
+      destination:
+        name: "{{.name}}"
+      syncPolicy:
+        automated: { prune: false, selfHeal: true }   # never prune namespaces automatically

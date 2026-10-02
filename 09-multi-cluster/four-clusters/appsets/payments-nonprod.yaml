@@ -1,0 +1,36 @@
+# payments: every app folder in the team's deploy repo x every non-prod cluster (dev, staging).
+# apps/<app>/overlays/<env> is picked from the cluster's env label. Auto-sync with self-heal.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: payments-nonprod
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - matrix:
+        generators:
+          - clusters:
+              selector:
+                matchLabels: { tier: nonprod }
+          - git:
+              repoURL: http://<git-host>/payments/payments-deploy.git
+              revision: main
+              directories:
+                - path: apps/*
+  template:
+    metadata:
+      name: "payments-{{.path.basename}}-{{.name}}"
+      labels: { team: payments, env: '{{index .metadata.labels "env"}}' }
+    spec:
+      project: payments-nonprod
+      source:
+        repoURL: http://<git-host>/payments/payments-deploy.git
+        targetRevision: main
+        path: '{{.path.path}}/overlays/{{index .metadata.labels "env"}}'
+      destination:
+        name: "{{.name}}"
+        namespace: "payments-{{.path.basename}}"
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }

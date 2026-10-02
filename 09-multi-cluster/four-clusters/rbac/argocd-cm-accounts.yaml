@@ -1,0 +1,10 @@
+# Lab only: local users (use SSO groups in real life) and allow the web terminal ("exec").
+# Apply on mgmt:  kubectl -n argocd patch cm argocd-cm --type merge --patch-file argocd-cm-accounts.yaml
+# Then, as admin, set each password:  argocd account update-password --account sam
+data:
+  accounts.petra: login
+  accounts.rita: login
+  accounts.sam: login
+  accounts.pat: login
+  accounts.victor: login        # no role mapping: gets policy.default (read-only)
+  exec.enabled: "true"

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels: { app: api, team: payments }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: api }
+  template:
+    metadata:
+      labels: { app: api, team: payments }
+    spec:
+      containers:
+        - name: web
+          image: nginxinc/nginx-unprivileged:1.27-alpine
+          ports: [ { containerPort: 8080 } ]
+          resources:
+            requests: { cpu: 50m, memory: 32Mi }
+            limits: { memory: 64Mi }
+          readinessProbe:
+            httpGet: { path: /, port: 8080 }

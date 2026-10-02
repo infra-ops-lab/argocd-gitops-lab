@@ -1,0 +1,20 @@
+# Team namespaces and quotas, owned by the platform team (non-prod clusters).
+apiVersion: v1
+kind: Namespace
+metadata: { name: shop-storefront, labels: { team: shop } }
+---
+apiVersion: v1
+kind: Namespace
+metadata: { name: payments-api, labels: { team: payments } }
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata: { name: team-quota, namespace: shop-storefront }
+spec:
+  hard: { requests.cpu: "2", requests.memory: 4Gi, limits.memory: 6Gi, pods: "20" }
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata: { name: team-quota, namespace: payments-api }
+spec:
+  hard: { requests.cpu: "2", requests.memory: 4Gi, limits.memory: 6Gi, pods: "20" }

@@ -1,0 +1,26 @@
+# shop team, non-production: dev and staging, only shop-* namespaces, only the team's repos.
+# No cluster-scoped resources, and no quotas/limits/network policies (those belong to the platform team).
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: shop-nonprod
+  namespace: argocd
+spec:
+  description: shop team, dev + staging
+  sourceRepos:
+    - http://<git-host>/shop/*
+  destinations:
+    - { name: dev, namespace: "shop-*" }
+    - { name: staging, namespace: "shop-*" }
+  clusterResourceWhitelist: []
+  namespaceResourceBlacklist:
+    - { group: "", kind: ResourceQuota }
+    - { group: "", kind: LimitRange }
+    - { group: networking.k8s.io, kind: NetworkPolicy }
+  roles:
+    # A token for the team's CI: it may only sync this project's apps (argocd proj role create-token ...).
+    - name: ci
+      description: CI pipeline may refresh and sync non-prod apps
+      policies:
+        - p, proj:shop-nonprod:ci, applications, get, shop-nonprod/*, allow
+        - p, proj:shop-nonprod:ci, applications, sync, shop-nonprod/*, allow

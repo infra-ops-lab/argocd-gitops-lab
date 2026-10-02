@@ -1,0 +1,72 @@
+# Applied on the prod cluster: least privilege.
+# Argo CD may only manage objects inside the two team namespaces; it cannot create cluster-scoped
+# resources (the cluster Secret on mgmt sets namespaces=shop-storefront,payments-api and
+# clusterResources=false to match). The namespaces and quotas are created here, by the platform
+# team's cluster bootstrap (kubectl/Terraform), not by Argo CD.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shop-storefront
+  labels: { team: shop }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payments-api
+  labels: { team: payments }
+---
+# Quotas are platform-owned: Argo CD's 'admin' binding below cannot change them.
+apiVersion: v1
+kind: ResourceQuota
+metadata: { name: team-quota, namespace: shop-storefront }
+spec:
+  hard: { requests.cpu: "4", requests.memory: 8Gi, limits.memory: 12Gi, pods: "40" }
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata: { name: team-quota, namespace: payments-api }
+spec:
+  hard: { requests.cpu: "4", requests.memory: 8Gi, limits.memory: 12Gi, pods: "40" }
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argocd-manager
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argocd-manager-token
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: argocd-manager
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argocd-manager
+  namespace: shop-storefront
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin                # built-in role: full control of objects in this namespace only
+subjects:
+  - kind: ServiceAccount
+    name: argocd-manager
+    namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argocd-manager
+  namespace: payments-api
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - kind: ServiceAccount
+    name: argocd-manager
+    namespace: kube-system
