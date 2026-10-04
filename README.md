@@ -1,5 +1,5 @@
 # argocd-gitops-lab
-
+Full Lecture# https://pkbehera.co.in/learn/gitops-argocd/ 
 > **Series** (do in order): 1. [gitea-actions-lab](https://github.com/infra-ops-lab/gitea-action-lab) — CI: build + push an image → 2. [argocd-gitops-lab](https://github.com/infra-ops-lab/argocd-gitops-lab) — CD: deploy it with GitOps → 3. jenkins-ci-lab (soon) → 4. cicd-capstone (soon): push code → new version live, no human step
 
 Hands-on, code-first lab: **ArgoCD on one cluster deploys to another cluster** from a git repo
