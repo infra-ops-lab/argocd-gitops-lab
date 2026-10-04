@@ -1,0 +1,21 @@
+# Variant of app.yaml for a local `kind` setup (see README: "Running this on kind instead").
+# Difference from app.yaml: destination.server (a raw address) instead of destination.name
+# (a registered cluster name) -- useful when the target cluster's API is bound to a fixed
+# address (e.g. a kind cluster's LAN IP) rather than registered under a memorable name.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hello-web
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: http://<gitea-host>:<port>/<owner>/deploy-demo.git
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://<target-cluster-ip>:<port>   # e.g. https://192.168.1.50:16443
+    namespace: hello-web
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]
