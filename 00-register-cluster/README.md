@@ -25,6 +25,18 @@ CURRENT  NAME                          CLUSTER       SERVER
 → `argocd cluster add kubernetes-admin@edge-cluster --name edge-cluster --yes`
 (kubeconfig not the default one? add `--kubeconfig <file>`)
 
+**If `get-contexts` or `cluster add` comes back empty:** `argocd cluster add` reads whatever
+`KUBECONFIG` currently points to (or `~/.kube/config` if unset) — it does **not** ask you which
+file to use. Run it before exporting `KUBECONFIG` to the target cluster's kubeconfig and you'll
+hit a confusing error that looks broken rather than wrong:
+```
+{"level":"error","msg":"Choose a context name from:","time":"..."}
+CURRENT  NAME  CLUSTER  SERVER
+```
+— an error telling you to choose a context, followed by an empty list. That's not a bug; it means
+no kubeconfig with any contexts is loaded. Fix: `export KUBECONFIG=<path>` (or `--kubeconfig
+<file>` on both commands), confirm the context shows up in `get-contexts`, *then* run `cluster add`.
+
 **Expect:** `edge-cluster` listed. Status `Unknown` until the first app targets it — normal.
 
 **Everyday CLI** (everything here is also in the UI)
